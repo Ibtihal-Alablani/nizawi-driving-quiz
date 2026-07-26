@@ -196,7 +196,17 @@
     var bar = el('div', 'topbar');
     var backBtn = el('button', 'btn btn-soft btn-sm', 'الرئيسية ⌂');
     backBtn.addEventListener('click', function () {
-      if (Object.keys(session.answers).length === 0 || confirm('هل تريدين إنهاء الجلسة والعودة للرئيسية؟ تقدم هذه الجلسة لن يُحفظ كنتيجة.')) renderHome();
+      if (Object.keys(session.answers).length === 0) { renderHome(); return; }
+      if (backBtn.dataset.arm) { renderHome(); return; }
+      backBtn.dataset.arm = '1';
+      backBtn.innerHTML = 'تأكيد الخروج؟';
+      backBtn.classList.add('btn-red');
+      setTimeout(function () {
+        if (!backBtn.isConnected) return;
+        delete backBtn.dataset.arm;
+        backBtn.innerHTML = 'الرئيسية ⌂';
+        backBtn.classList.remove('btn-red');
+      }, 2500);
     });
     bar.appendChild(backBtn);
     var pw = el('div', 'progress-wrap');
