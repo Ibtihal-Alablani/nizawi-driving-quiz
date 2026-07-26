@@ -316,7 +316,7 @@
 
     var flaggedList = Array.from(flags).map(function (id) { return byId[id]; }).filter(Boolean);
     var flagCard = el('div', 'card mode-card' + (flaggedList.length ? ' clickable' : ' dim'));
-    flagCard.appendChild(el('div', 'icon', '⭐'));
+    flagCard.appendChild(el('div', 'icon', '🚩'));
     flagCard.appendChild(el('div', 'name', 'أسئلة المراجعة'));
     flagCard.appendChild(el('div', 'desc', flaggedList.length ? 'الأسئلة التي وضعتِ عليها علامة مراجعة' : 'لم تضعي علامة مراجعة على أي سؤال بعد'));
     flagCard.appendChild(el('span', 'count', flaggedList.length + ' سؤال'));
@@ -425,11 +425,11 @@
     qt.innerHTML = esc(q.q) + '<span class="q-unit-tag">' + esc(q.unitTitle) + ' — سؤال ' + q.n + '</span>';
     head.appendChild(qt);
 
-    var flagBtn = el('button', 'flag-btn' + (flags.has(q.id) ? ' flagged' : ''), flags.has(q.id) ? '⭐' : '☆');
+    var flagBtn = el('button', 'flag-btn' + (flags.has(q.id) ? ' flagged' : ''), flags.has(q.id) ? '🚩' : '⚐');
     flagBtn.title = 'علامة مراجعة — يبقى السؤال في قائمة المراجعة لإعادة التدرب عليه';
     flagBtn.addEventListener('click', function () {
-      if (flags.has(q.id)) { flags.delete(q.id); flagBtn.classList.remove('flagged'); flagBtn.innerHTML = '☆'; }
-      else { flags.add(q.id); flagBtn.classList.add('flagged'); flagBtn.innerHTML = '⭐'; }
+      if (flags.has(q.id)) { flags.delete(q.id); flagBtn.classList.remove('flagged'); flagBtn.innerHTML = '⚐'; }
+      else { flags.add(q.id); flagBtn.classList.add('flagged'); flagBtn.innerHTML = '🚩'; }
       saveFlags();
     });
     head.appendChild(flagBtn);
@@ -616,7 +616,7 @@
       var item = el('div', 'review-item');
       item.appendChild(el('span', 'mark ' + (ok ? 'ok' : 'bad'), ok ? '✔' : (wasAnswered ? '✘' : '—')));
       var label = (i + 1) + '. ' + q.q;
-      if (flags.has(q.id)) label = '⭐ ' + label;
+      if (flags.has(q.id)) label = '🚩 ' + label;
       item.appendChild(el('span', null, esc(label)));
       list.appendChild(item);
     });

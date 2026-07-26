@@ -19,7 +19,7 @@
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
-  font-family: 'Tajawal', system-ui, sans-serif;
+  font-family: Arial, 'Segoe UI', Tahoma, sans-serif;
   background: var(--bg);
   color: var(--ink);
   line-height: 1.7;
@@ -185,8 +185,8 @@ body {
   font-size: 1.25rem; cursor: pointer; padding: 4px 10px; line-height: 1.4;
   transition: background 0.15s, border-color 0.15s;
 }
-.flag-btn:hover { border-color: var(--amber); }
-.flag-btn.flagged { background: #fff7e0; border-color: var(--amber); }
+.flag-btn:hover { border-color: var(--red); }
+.flag-btn.flagged { background: var(--red-light); border-color: var(--red); }
 
 .q-figs { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin: 14px 0 4px; }
 .q-figs img {
@@ -200,6 +200,7 @@ body {
   background: #fff; border: 1.5px solid var(--border); border-radius: 12px;
   padding: 12px 14px; cursor: pointer; font-family: inherit; font-size: 1rem;
   transition: border-color 0.12s, background 0.12s; width: 100%;
+  color: #000; font-weight: 700;
 }
 .opt:hover:not([disabled]) { border-color: var(--accent); background: var(--accent-light); }
 .opt[disabled] { cursor: default; }
