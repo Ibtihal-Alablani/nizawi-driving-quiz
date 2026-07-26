@@ -217,6 +217,35 @@
     bar.appendChild(el('span', 'progress-text', (session.i + 1) + ' / ' + session.questions.length));
     app.appendChild(bar);
 
+    // شريط التنقل بين الوحدات (في الاختبار الشامل: قفز داخل الجلسة، وفي وضع الوحدة: تبديل الوحدة)
+    var showChips = session.mode === 'all' || session.mode.indexOf('unit') === 0;
+    if (showChips) {
+      var chips = el('div', 'unit-chips');
+      chips.appendChild(el('span', 'chips-label', 'الوحدات:'));
+      QUIZ_UNITS.forEach(function (u) {
+        var isCurrent = q.unit === u.num;
+        var chip = el('button', 'unit-chip' + (isCurrent ? ' current' : ''), u.num);
+        chip.title = u.full + ' (' + u.questions.length + ' سؤالًا)';
+        chip.addEventListener('click', function () {
+          if (session.mode === 'all') {
+            // القفز إلى أول سؤال من هذه الوحدة داخل الجلسة (يعمل مع الترتيب الأصلي والمخلوط)
+            for (var k = 0; k < session.questions.length; k++) {
+              if (session.questions[k].unit === u.num) {
+                session.i = k;
+                renderQuestion();
+                window.scrollTo(0, 0);
+                return;
+              }
+            }
+          } else if (!isCurrent) {
+            startSession(u.questions, 'unit' + u.num, u.full, session.shuffled);
+          }
+        });
+        chips.appendChild(chip);
+      });
+      app.appendChild(chips);
+    }
+
     // بطاقة السؤال
     var card = el('div', 'card q-card');
     var head = el('div', 'q-head');

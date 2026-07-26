@@ -103,6 +103,21 @@ body {
 .progress-bar { background: var(--accent); height: 100%; border-radius: 20px; transition: width 0.3s; }
 .progress-text { font-size: 0.85rem; color: var(--muted); font-weight: 700; white-space: nowrap; }
 
+/* شريط الوحدات */
+.unit-chips {
+  display: flex; align-items: center; gap: 7px; flex-wrap: wrap;
+  margin: 2px 0 4px;
+}
+.chips-label { color: var(--muted); font-size: 0.85rem; font-weight: 700; }
+.unit-chip {
+  min-width: 34px; height: 34px; border-radius: 10px;
+  border: 1.5px solid var(--border); background: var(--card);
+  color: var(--ink); font-family: inherit; font-weight: 800; font-size: 0.95rem;
+  cursor: pointer; transition: border-color 0.12s, background 0.12s;
+}
+.unit-chip:hover { border-color: var(--accent); background: var(--accent-light); }
+.unit-chip.current { background: var(--accent); border-color: var(--accent); color: #fff; }
+
 .q-card { margin-top: 14px; }
 .q-head { display: flex; align-items: flex-start; gap: 10px; }
 .q-num {
