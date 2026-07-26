@@ -6,25 +6,58 @@
   var app = document.getElementById('app');
 
   // ---------- التخزين المحلي ----------
-  var store = {
-    read: function (key, fallback) {
-      try {
-        var v = localStorage.getItem('nizawi_' + key);
-        return v === null ? fallback : JSON.parse(v);
-      } catch (e) { return fallback; }
-    },
-    write: function (key, val) {
-      try { localStorage.setItem('nizawi_' + key, JSON.stringify(val)); } catch (e) {}
+  function rawRead(key, fallback) {
+    try {
+      var v = localStorage.getItem('nizawi_' + key);
+      return v === null ? fallback : JSON.parse(v);
+    } catch (e) { return fallback; }
+  }
+  function rawWrite(key, val) {
+    try { localStorage.setItem('nizawi_' + key, JSON.stringify(val)); } catch (e) {}
+  }
+  function rawRemove(key) {
+    try { localStorage.removeItem('nizawi_' + key); } catch (e) {}
+  }
+
+  // ---------- المستخدمون (حسابات محلية على هذا الجهاز) ----------
+  var profiles = rawRead('profiles', []);           // [{id, name, email}]
+  var currentProfileId = rawRead('currentProfile', null);
+
+  function currentProfile() {
+    for (var i = 0; i < profiles.length; i++) {
+      if (profiles[i].id === currentProfileId) return profiles[i];
     }
+    return null;
+  }
+
+  // مفاتيح بيانات خاصة بكل مستخدم
+  var store = {
+    read: function (key, fallback) { return rawRead(currentProfileId + '_' + key, fallback); },
+    write: function (key, val) { rawWrite(currentProfileId + '_' + key, val); },
+    remove: function (key) { rawRemove(currentProfileId + '_' + key); }
   };
 
-  var flags = new Set(store.read('flags', []));          // أسئلة معلّمة للمراجعة
-  var wrongPool = new Set(store.read('wrong', []));      // أسئلة أُجيبت خطأ ولم تُصحح بعد
-  var best = store.read('best', {});                     // أفضل نتيجة لكل وضع
+  var flags = new Set();       // أسئلة معلّمة للمراجعة
+  var wrongPool = new Set();   // أسئلة أُجيبت خطأ ولم تُصحح بعد
+  var best = {};               // أفضل نتيجة لكل وضع
 
+  function loadProfileData() {
+    flags = new Set(store.read('flags', []));
+    wrongPool = new Set(store.read('wrong', []));
+    best = store.read('best', {});
+  }
   function saveFlags() { store.write('flags', Array.from(flags)); }
   function saveWrong() { store.write('wrong', Array.from(wrongPool)); }
   function saveBest() { store.write('best', best); }
+
+  // ترحيل بيانات النسخة القديمة (قبل نظام المستخدمين) لأول مستخدم يُسجل
+  function migrateLegacyData() {
+    ['flags', 'wrong', 'best', 'shuffle'].forEach(function (k) {
+      var legacy = rawRead(k, null);
+      if (legacy !== null && store.read(k, null) === null) store.write(k, legacy);
+      rawRemove(k);
+    });
+  }
 
   // ---------- فهرسة الأسئلة ----------
   var allQuestions = [];
@@ -44,7 +77,7 @@
     return Array.isArray(q.alsoCorrect) && q.alsoCorrect.indexOf(idx) !== -1;
   }
 
-  // ---------- حالة الجلسة ----------
+  // ---------- حالة الجلسة + الاستئناف ----------
   var session = null; // {questions, i, answers:{}, mode, title, shuffled}
 
   function shuffle(arr) {
@@ -54,6 +87,41 @@
       var t = a[i]; a[i] = a[j]; a[j] = t;
     }
     return a;
+  }
+
+  function persistSession() {
+    if (!session) { store.remove('session'); return; }
+    store.write('session', {
+      ids: session.questions.map(function (q) { return q.id; }),
+      i: session.i,
+      answers: session.answers,
+      mode: session.mode,
+      title: session.title,
+      shuffled: session.shuffled
+    });
+  }
+  function clearSavedSession() { store.remove('session'); }
+
+  function savedSessionInfo() {
+    var s = store.read('session', null);
+    if (!s || !Array.isArray(s.ids) || !s.ids.length) return null;
+    // تجاهل الجلسات المكتملة أو التالفة
+    var qs = s.ids.map(function (id) { return byId[id]; }).filter(Boolean);
+    if (qs.length !== s.ids.length) return null;
+    return s;
+  }
+
+  function resumeSession(s) {
+    session = {
+      questions: s.ids.map(function (id) { return byId[id]; }),
+      i: Math.min(s.i, s.ids.length - 1),
+      answers: s.answers || {},
+      mode: s.mode,
+      title: s.title,
+      shuffled: !!s.shuffled
+    };
+    renderQuestion();
+    window.scrollTo(0, 0);
   }
 
   function startSession(questions, mode, title, doShuffle) {
@@ -66,6 +134,7 @@
       title: title,
       shuffled: !!doShuffle
     };
+    persistSession();
     renderQuestion();
     window.scrollTo(0, 0);
   }
@@ -83,15 +152,127 @@
     });
   }
 
-  // ---------- الصفحة الرئيسية ----------
-  function renderHome() {
+  // ---------- شاشة التسجيل / اختيار المستخدم ----------
+  function renderRegister() {
     session = null;
     app.innerHTML = '';
 
     var header = el('div', 'site-header');
     header.appendChild(el('h1', null, '🚗 اختبار القيادة النظري'));
-    header.appendChild(el('p', 'sub', 'تدرّبي على عينة أسئلة اختبار القيادة من كتاب النزاوي لتعليم القيادة — ' + allQuestions.length + ' سؤالًا في ' + QUIZ_UNITS.length + ' وحدات'));
+    header.appendChild(el('p', 'sub', 'تدرّب على عينة أسئلة اختبار القيادة من كتاب النزاوي لتعليم القيادة'));
     app.appendChild(header);
+
+    var card = el('div', 'card register-card');
+    card.appendChild(el('h2', 'register-title', profiles.length ? 'من يتدرب اليوم؟' : 'أهلًا بك! سجلي بياناتك أول مرة'));
+
+    // المستخدمون الحاليون على هذا الجهاز
+    if (profiles.length) {
+      var plist = el('div', 'profile-list');
+      profiles.forEach(function (p) {
+        var row = el('button', 'profile-row');
+        row.type = 'button';
+        row.appendChild(el('span', 'profile-avatar', p.name.trim().charAt(0) || '؟'));
+        var info = el('span', 'profile-info');
+        info.appendChild(el('span', 'profile-name', esc(p.name)));
+        info.appendChild(el('span', 'profile-email', esc(p.email)));
+        row.appendChild(info);
+        row.addEventListener('click', function () {
+          currentProfileId = p.id;
+          rawWrite('currentProfile', currentProfileId);
+          loadProfileData();
+          renderHome();
+        });
+        plist.appendChild(row);
+      });
+      card.appendChild(plist);
+      card.appendChild(el('div', 'register-divider', 'أو سجلي مستخدمًا جديدًا'));
+    }
+
+    var form = el('form', 'register-form');
+    var nameLbl = el('label', 'field-label', 'الاسم');
+    var nameInput = document.createElement('input');
+    nameInput.type = 'text';
+    nameInput.className = 'field-input';
+    nameInput.placeholder = 'مثال: ابتهال';
+    nameInput.required = true;
+    nameInput.maxLength = 60;
+    var emailLbl = el('label', 'field-label', 'البريد الإلكتروني');
+    var emailInput = document.createElement('input');
+    emailInput.type = 'email';
+    emailInput.className = 'field-input';
+    emailInput.placeholder = 'name@example.com';
+    emailInput.required = true;
+    emailInput.maxLength = 120;
+    var err = el('div', 'field-error');
+    var submit = el('button', 'btn btn-primary register-btn', 'ابدئي التدريب 🚀');
+    submit.type = 'submit';
+
+    form.appendChild(nameLbl); form.appendChild(nameInput);
+    form.appendChild(emailLbl); form.appendChild(emailInput);
+    form.appendChild(err); form.appendChild(submit);
+
+    form.addEventListener('submit', function (ev) {
+      ev.preventDefault();
+      var name = nameInput.value.trim();
+      var email = emailInput.value.trim().toLowerCase();
+      if (!name) { err.textContent = 'فضلًا أدخلي الاسم'; return; }
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { err.textContent = 'فضلًا أدخلي بريدًا إلكترونيًا صحيحًا'; return; }
+      // إن كان البريد مسجلًا مسبقًا ندخل بنفس الحساب
+      var existing = profiles.filter(function (p) { return p.email === email; })[0];
+      var isFirstProfile = profiles.length === 0;
+      if (existing) {
+        currentProfileId = existing.id;
+      } else {
+        var p = { id: 'p' + Date.now().toString(36), name: name, email: email };
+        profiles.push(p);
+        rawWrite('profiles', profiles);
+        currentProfileId = p.id;
+      }
+      rawWrite('currentProfile', currentProfileId);
+      if (isFirstProfile) migrateLegacyData();
+      loadProfileData();
+      renderHome();
+    });
+
+    card.appendChild(form);
+    card.appendChild(el('p', 'register-note', '🔒 بياناتك وتقدمك يُحفظان على هذا الجهاز فقط (داخل المتصفح) ولا يُرسلان إلى أي خادم.'));
+    app.appendChild(card);
+  }
+
+  // ---------- الصفحة الرئيسية ----------
+  function renderHome() {
+    var profile = currentProfile();
+    if (!profile) { renderRegister(); return; }
+    session = null;
+    app.innerHTML = '';
+
+    var header = el('div', 'site-header');
+    header.appendChild(el('h1', null, '🚗 اختبار القيادة النظري'));
+    header.appendChild(el('p', 'sub', 'أهلًا ' + esc(profile.name) + ' 👋 — ' + allQuestions.length + ' سؤالًا في ' + QUIZ_UNITS.length + ' وحدات من كتاب النزاوي لتعليم القيادة'));
+    var switchLink = el('button', 'switch-user', 'تبديل المستخدم ⇄');
+    switchLink.addEventListener('click', function () { renderRegister(); });
+    header.appendChild(switchLink);
+    app.appendChild(header);
+
+    // بطاقة متابعة الجلسة المحفوظة
+    var saved = savedSessionInfo();
+    if (saved) {
+      var answeredCount = Object.keys(saved.answers || {}).length;
+      var resumeCard = el('div', 'card resume-card');
+      var rInfo = el('div', 'resume-info');
+      rInfo.appendChild(el('div', 'resume-title', '⏯ لديك جلسة غير مكتملة: ' + esc(saved.title)));
+      rInfo.appendChild(el('div', 'resume-meta', 'توقفتِ عند السؤال ' + (Math.min(saved.i, saved.ids.length - 1) + 1) + ' من ' + saved.ids.length + ' — أجبتِ عن ' + answeredCount + ' سؤالًا'));
+      resumeCard.appendChild(rInfo);
+      var rActions = el('div', 'resume-actions');
+      var resumeBtn = el('button', 'btn btn-primary', 'متابعة من حيث توقفت');
+      resumeBtn.addEventListener('click', function () { resumeSession(saved); });
+      var dismissBtn = el('button', 'btn btn-soft btn-sm', 'تجاهل');
+      dismissBtn.addEventListener('click', function () { clearSavedSession(); renderHome(); });
+      rActions.appendChild(resumeBtn);
+      rActions.appendChild(dismissBtn);
+      resumeCard.appendChild(rActions);
+      app.appendChild(resumeCard);
+    }
 
     // خيار الخلط
     var optRow = el('div', 'options-row');
@@ -166,8 +347,7 @@
       row.appendChild(el('div', 'unum', u.num));
       var info = el('div', 'uinfo');
       info.appendChild(el('div', 'uname', u.full));
-      var meta = el('div', 'umeta', u.questions.length + ' سؤالًا');
-      info.appendChild(meta);
+      info.appendChild(el('div', 'umeta', u.questions.length + ' سؤالًا'));
       row.appendChild(info);
       var b = best['unit' + u.num];
       if (b) row.appendChild(el('div', 'ubest', 'أفضل نتيجة: ' + b.score + '/' + b.total));
@@ -180,7 +360,7 @@
 
     app.appendChild(el('div', 'notice',
       '📖 المصدر: عينة أسئلة اختبار القيادة من كتاب «النزاوي لتعليم القيادة»، والإجابات الصحيحة منقولة من تظليل الكتاب ومفتاح إجاباته. ' +
-      'شرح الإجابات مُعدّ للمساعدة على الفهم وليس نصًا من الكتاب. تقدمك (العلامات والأخطاء) يُحفظ على جهازك.'));
+      'شرح الإجابات مُعدّ للمساعدة على الفهم وليس نصًا من الكتاب. تقدمك يُحفظ على هذا الجهاز باسم المستخدم المسجل.'));
 
     var footer = el('footer', 'site-footer', 'جميع الأسئلة منقولة من كتاب النزاوي لتعليم القيادة لأغراض التدريب الشخصي');
     app.appendChild(footer);
@@ -190,23 +370,15 @@
   function renderQuestion() {
     var q = session.questions[session.i];
     var answered = session.answers.hasOwnProperty(q.id);
+    persistSession();
     app.innerHTML = '';
 
     // الشريط العلوي
     var bar = el('div', 'topbar');
     var backBtn = el('button', 'btn btn-soft btn-sm', 'الرئيسية ⌂');
     backBtn.addEventListener('click', function () {
-      if (Object.keys(session.answers).length === 0) { renderHome(); return; }
-      if (backBtn.dataset.arm) { renderHome(); return; }
-      backBtn.dataset.arm = '1';
-      backBtn.innerHTML = 'تأكيد الخروج؟';
-      backBtn.classList.add('btn-red');
-      setTimeout(function () {
-        if (!backBtn.isConnected) return;
-        delete backBtn.dataset.arm;
-        backBtn.innerHTML = 'الرئيسية ⌂';
-        backBtn.classList.remove('btn-red');
-      }, 2500);
+      // الجلسة محفوظة تلقائيًا ويمكن متابعتها من الرئيسية
+      renderHome();
     });
     bar.appendChild(backBtn);
     var pw = el('div', 'progress-wrap');
@@ -228,7 +400,6 @@
         chip.title = u.full + ' (' + u.questions.length + ' سؤالًا)';
         chip.addEventListener('click', function () {
           if (session.mode === 'all') {
-            // القفز إلى أول سؤال من هذه الوحدة داخل الجلسة (يعمل مع الترتيب الأصلي والمخلوط)
             for (var k = 0; k < session.questions.length; k++) {
               if (session.questions[k].unit === u.num) {
                 session.i = k;
@@ -321,6 +492,7 @@
   function answer(q, idx) {
     if (session.answers.hasOwnProperty(q.id)) return;
     session.answers[q.id] = idx;
+    persistSession();
     var ok = isCorrectChoice(q, idx);
     if (ok) {
       if (wrongPool.has(q.id)) { wrongPool.delete(q.id); saveWrong(); }
@@ -380,6 +552,7 @@
 
   // ---------- النتيجة ----------
   function renderSummary() {
+    clearSavedSession(); // اكتملت الجلسة — لا حاجة للاستئناف
     var qs = session.questions;
     var score = 0, wrongQs = [], skipped = 0;
     qs.forEach(function (q) {
@@ -390,7 +563,6 @@
     var total = qs.length;
     var pct = Math.round((score / total) * 100);
 
-    // حفظ أفضل نتيجة
     var prev = best[session.mode];
     if (!prev || score / total > prev.score / prev.total) {
       best[session.mode] = { score: score, total: total };
@@ -424,7 +596,6 @@
     var retryAll = el('button', 'btn btn-primary', '↺ إعادة الاختبار بالكامل');
     var mode = session.mode, title = session.title, allQs = qs, wasShuffled = session.shuffled;
     retryAll.addEventListener('click', function () {
-      // نعيد نفس مجموعة الأسئلة (بترتيبها الأصلي إن لم يكن خلط)
       var base = mode === 'all' ? allQuestions :
                  mode.indexOf('unit') === 0 ? QUIZ_UNITS[parseInt(mode.slice(4), 10) - 1].questions :
                  allQs;
@@ -454,5 +625,10 @@
   }
 
   // ---------- البداية ----------
-  renderHome();
+  if (currentProfile()) {
+    loadProfileData();
+    renderHome();
+  } else {
+    renderRegister();
+  }
 })();
