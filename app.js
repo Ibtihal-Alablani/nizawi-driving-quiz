@@ -274,9 +274,15 @@
 
     // التنقل
     var nav = el('div', 'quiz-nav');
-    var skipBtn = el('button', 'btn btn-ghost', session.i + 1 < session.questions.length ? 'تخطي السؤال ←' : 'إنهاء الاختبار');
-    skipBtn.addEventListener('click', function () { next(); });
-    nav.appendChild(skipBtn);
+    var prevBtn = el('button', 'btn btn-soft nav-prev', 'السؤال السابق →');
+    prevBtn.disabled = session.i === 0;
+    prevBtn.addEventListener('click', function () {
+      if (session.i > 0) { session.i--; renderQuestion(); window.scrollTo(0, 0); }
+    });
+    var nextBtn = el('button', 'btn btn-ghost nav-next', session.i + 1 < session.questions.length ? 'تخطي السؤال ←' : 'إنهاء الاختبار 🏁');
+    nextBtn.addEventListener('click', function () { next(); });
+    nav.appendChild(prevBtn);
+    nav.appendChild(nextBtn);
     app.appendChild(nav);
 
     if (answered) showFeedback(q, session.answers[q.id]);
@@ -314,13 +320,14 @@
     var qCard = app.querySelector('.q-card');
     qCard.appendChild(fb);
 
-    // زر التالي
+    // تحويل زر التخطي إلى زر التالي الأساسي مع إبقاء زر السابق
     var nav = app.querySelector('.quiz-nav');
-    nav.innerHTML = '';
-    var nextBtn = el('button', 'btn btn-primary', session.i + 1 < session.questions.length ? 'السؤال التالي ←' : 'عرض النتيجة 🏁');
-    nextBtn.addEventListener('click', function () { next(); });
-    nav.appendChild(nextBtn);
-    if (!ok) nav.appendChild(el('span', 'progress-text', 'أُضيف السؤال لقائمة «إعادة الأخطاء»'));
+    var nextBtn = nav.querySelector('.nav-next');
+    nextBtn.className = 'btn btn-primary nav-next';
+    nextBtn.innerHTML = session.i + 1 < session.questions.length ? 'السؤال التالي ←' : 'عرض النتيجة 🏁';
+    if (!ok && !nav.querySelector('.wrong-note')) {
+      nav.appendChild(el('span', 'progress-text wrong-note', 'أُضيف السؤال لقائمة «إعادة الأخطاء»'));
+    }
     nextBtn.focus();
   }
 
