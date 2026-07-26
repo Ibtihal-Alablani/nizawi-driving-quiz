@@ -3,6 +3,7 @@
   'use strict';
 
   var LETTERS = ['أ', 'ب', 'ج', 'د'];
+  var ORDINALS = ['الأولى', 'الثانية', 'الثالثة', 'الرابعة', 'الخامسة', 'السادسة', 'السابعة', 'الثامنة'];
   var app = document.getElementById('app');
 
   // ---------- التخزين المحلي ----------
@@ -373,7 +374,7 @@
     persistSession();
     app.innerHTML = '';
 
-    // الشريط العلوي
+    // الشريط العلوي مع شريطي التقدم
     var bar = el('div', 'topbar');
     var backBtn = el('button', 'btn btn-soft btn-sm', 'الرئيسية ⌂');
     backBtn.addEventListener('click', function () {
@@ -381,12 +382,31 @@
       renderHome();
     });
     bar.appendChild(backBtn);
-    var pw = el('div', 'progress-wrap');
-    var pb = el('div', 'progress-bar');
-    pb.style.width = Math.round((session.i / session.questions.length) * 100) + '%';
-    pw.appendChild(pb);
-    bar.appendChild(pw);
-    bar.appendChild(el('span', 'progress-text', (session.i + 1) + ' / ' + session.questions.length));
+
+    function progRow(label, cur, total) {
+      var row = el('div', 'prog-row');
+      row.appendChild(el('span', 'prog-label', label));
+      var pw = el('div', 'progress-wrap');
+      var pb = el('div', 'progress-bar');
+      pb.style.width = Math.round((cur / total) * 100) + '%';
+      pw.appendChild(pb);
+      row.appendChild(pw);
+      row.appendChild(el('span', 'progress-text', cur + ' / ' + total));
+      return row;
+    }
+
+    var progBlock = el('div', 'progress-block');
+    if (session.mode === 'all') {
+      var unitQs = session.questions.filter(function (x) { return x.unit === q.unit; });
+      var unitPos = unitQs.indexOf(q) + 1;
+      progBlock.appendChild(progRow('الوحدة ' + ORDINALS[q.unit - 1], unitPos, unitQs.length));
+      progBlock.appendChild(progRow('الاختبار الكامل', session.i + 1, session.questions.length));
+    } else if (session.mode.indexOf('unit') === 0) {
+      progBlock.appendChild(progRow('الوحدة ' + ORDINALS[q.unit - 1], session.i + 1, session.questions.length));
+    } else {
+      progBlock.appendChild(progRow(session.title, session.i + 1, session.questions.length));
+    }
+    bar.appendChild(progBlock);
     app.appendChild(bar);
 
     // شريط التنقل بين الوحدات (في الاختبار الشامل: قفز داخل الجلسة، وفي وضع الوحدة: تبديل الوحدة)
@@ -396,7 +416,7 @@
       chips.appendChild(el('span', 'chips-label', 'الوحدات:'));
       QUIZ_UNITS.forEach(function (u) {
         var isCurrent = q.unit === u.num;
-        var chip = el('button', 'unit-chip' + (isCurrent ? ' current' : ''), u.num);
+        var chip = el('button', 'unit-chip' + (isCurrent ? ' current' : ''), ORDINALS[u.num - 1]);
         chip.title = u.full + ' (' + u.questions.length + ' سؤالًا)';
         chip.addEventListener('click', function () {
           if (session.mode === 'all') {

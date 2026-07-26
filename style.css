@@ -26,7 +26,33 @@ body {
   min-height: 100vh;
 }
 
-#app { max-width: 780px; margin: 0 auto; padding: 18px 16px 60px; }
+#app { max-width: 780px; margin: 0 auto; padding: 18px 16px 110px; }
+
+/* شاشات الجوال: تكثيف العرض ليظهر السؤال وأزرار التنقل دون تمرير */
+@media (max-width: 600px) {
+  #app { padding: 8px 10px 100px; }
+  .site-header h1 { font-size: 1.2rem; }
+  .topbar { padding: 4px 0 8px; gap: 8px; }
+  .q-card { padding: 10px 12px; margin-top: 8px; }
+  .q-text { font-size: 0.98rem; line-height: 1.5; }
+  .q-num { min-width: 28px; height: 28px; font-size: 0.9rem; }
+  .flag-btn { font-size: 1.05rem; padding: 2px 8px; }
+  .q-figs { margin: 8px 0 2px; gap: 6px; }
+  .q-figs img { max-height: 140px; padding: 2px; }
+  .opts { gap: 6px; margin-top: 8px; }
+  .opt { padding: 7px 9px; font-size: 0.9rem; gap: 8px; line-height: 1.45; }
+  .opt .letter { min-width: 24px; height: 24px; font-size: 0.85rem; }
+  .opt .opt-body img { max-height: 64px; }
+  .unit-chips { gap: 4px; margin: 0 0 2px; }
+  .unit-chip { padding: 3px 7px; font-size: 0.75rem; border-radius: 8px; }
+  .chips-label { display: none; }
+  .prog-label { min-width: 70px; font-size: 0.68rem; }
+  .progress-text { font-size: 0.7rem; }
+  .feedback { padding: 9px 11px; margin-top: 8px; }
+  .feedback .why { font-size: 0.88rem; }
+  .btn { padding: 8px 14px; font-size: 0.92rem; }
+  .quiz-nav { padding: 8px 10px calc(8px + env(safe-area-inset-bottom)); }
+}
 
 /* ---------- header ---------- */
 .site-header { text-align: center; padding: 18px 0 6px; }
@@ -151,9 +177,17 @@ body {
 .notice { background: var(--accent-light); border: 1px solid #f3d9c8; border-radius: 10px; padding: 10px 14px; font-size: 0.88rem; color: #8a5230; margin-top: 18px; }
 
 /* ---------- quiz ---------- */
-.progress-wrap { background: #eee7df; border-radius: 20px; height: 10px; overflow: hidden; flex: 1; }
+.progress-wrap { background: #eee7df; border-radius: 20px; height: 8px; overflow: hidden; flex: 1; }
 .progress-bar { background: var(--accent); height: 100%; border-radius: 20px; transition: width 0.3s; }
-.progress-text { font-size: 0.85rem; color: var(--muted); font-weight: 700; white-space: nowrap; }
+.progress-text { font-size: 0.8rem; color: var(--muted); font-weight: 700; white-space: nowrap; }
+.progress-block { flex: 1; display: flex; flex-direction: column; gap: 5px; }
+.prog-row { display: flex; align-items: center; gap: 8px; }
+.prog-label {
+  font-size: 0.75rem; font-weight: 700; color: var(--muted);
+  white-space: nowrap; min-width: 88px;
+}
+.prog-row:last-child .progress-bar { background: var(--green); }
+.prog-row:first-child .progress-bar { background: var(--accent); }
 
 /* شريط الوحدات */
 .unit-chips {
@@ -162,9 +196,9 @@ body {
 }
 .chips-label { color: var(--muted); font-size: 0.85rem; font-weight: 700; }
 .unit-chip {
-  min-width: 34px; height: 34px; border-radius: 10px;
+  padding: 5px 11px; border-radius: 10px;
   border: 1.5px solid var(--border); background: var(--card);
-  color: var(--ink); font-family: inherit; font-weight: 800; font-size: 0.95rem;
+  color: var(--ink); font-family: inherit; font-weight: 800; font-size: 0.85rem;
   cursor: pointer; transition: border-color 0.12s, background 0.12s;
 }
 .unit-chip:hover { border-color: var(--accent); background: var(--accent-light); }
@@ -226,7 +260,16 @@ body {
 .feedback .why { margin-top: 6px; color: #444; font-size: 0.97rem; }
 .feedback .why b { color: var(--ink); }
 
-.quiz-nav { display: flex; gap: 10px; margin-top: 18px; justify-content: space-between; align-items: center; flex-wrap: wrap; }
+.quiz-nav {
+  position: fixed; bottom: 0; left: 0; right: 0;
+  max-width: 780px; margin: 0 auto;
+  display: flex; gap: 10px; justify-content: space-between; align-items: center;
+  background: var(--card); border: 1px solid var(--border); border-bottom: none;
+  border-radius: 14px 14px 0 0; box-shadow: 0 -3px 14px rgba(60, 40, 20, 0.1);
+  padding: 10px 14px calc(10px + env(safe-area-inset-bottom));
+  z-index: 50;
+}
+.quiz-nav .wrong-note { flex-basis: 100%; text-align: center; order: 3; }
 
 /* ---------- summary ---------- */
 .summary { text-align: center; padding: 10px 0; }
