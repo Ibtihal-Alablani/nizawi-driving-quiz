@@ -28,30 +28,38 @@ body {
 
 #app { max-width: 780px; margin: 0 auto; padding: 18px 16px 110px; }
 
-/* شاشات الجوال: تكثيف العرض ليظهر السؤال وأزرار التنقل دون تمرير */
+/* شاشات الجوال: تكثيف أقصى للعرض ليظهر السؤال وخياراته وأزرار التنقل دون تمرير */
 @media (max-width: 600px) {
-  #app { padding: 8px 10px 100px; }
-  .site-header h1 { font-size: 1.2rem; }
-  .topbar { padding: 4px 0 8px; gap: 8px; }
-  .q-card { padding: 10px 12px; margin-top: 8px; }
-  .q-text { font-size: 0.98rem; line-height: 1.5; }
-  .q-num { min-width: 28px; height: 28px; font-size: 0.9rem; }
-  .flag-btn { font-size: 1.05rem; padding: 2px 8px; }
-  .q-figs { margin: 8px 0 2px; gap: 6px; }
-  .q-figs img { max-height: 140px; padding: 2px; }
-  .opts { gap: 6px; margin-top: 8px; }
-  .opt { padding: 7px 9px; font-size: 0.9rem; gap: 8px; line-height: 1.45; }
-  .opt .letter { min-width: 24px; height: 24px; font-size: 0.85rem; }
-  .opt .opt-body img { max-height: 64px; }
-  .unit-chips { gap: 4px; margin: 0 0 2px; }
-  .unit-chip { padding: 3px 7px; font-size: 0.75rem; border-radius: 8px; }
+  #app { padding: 4px 7px 84px; }
+  .site-header { padding: 8px 0 2px; }
+  .site-header h1 { font-size: 1.15rem; }
+  .topbar { padding: 2px 0 4px; gap: 6px; }
+  .progress-block { gap: 2px; }
+  .progress-wrap { height: 6px; }
+  .q-card { padding: 7px 9px; margin-top: 4px; border-radius: 10px; }
+  .q-head { gap: 7px; }
+  .q-text { font-size: 0.93rem; line-height: 1.4; }
+  .q-unit-tag { font-size: 0.68rem; margin-top: 0; }
+  .q-num { min-width: 24px; height: 24px; font-size: 0.85rem; border-radius: 7px; }
+  .flag-btn { font-size: 0.95rem; padding: 1px 6px; border-radius: 7px; }
+  .q-figs { margin: 5px 0 0; gap: 5px; }
+  .q-figs img { max-height: 110px; padding: 2px; border-radius: 7px; }
+  .opts { gap: 4px; margin-top: 6px; }
+  .opt { padding: 5px 7px; font-size: 0.86rem; gap: 7px; line-height: 1.3; border-radius: 9px; }
+  .opt .letter { min-width: 21px; height: 21px; font-size: 0.8rem; }
+  .opt .opt-body img { max-height: 54px; }
+  .unit-chips { gap: 3px; margin: 0; }
+  .unit-chip { padding: 2px 6px; font-size: 0.7rem; border-radius: 7px; border-width: 1px; }
   .chips-label { display: none; }
-  .prog-label { min-width: 70px; font-size: 0.68rem; }
-  .progress-text { font-size: 0.7rem; }
-  .feedback { padding: 9px 11px; margin-top: 8px; }
-  .feedback .why { font-size: 0.88rem; }
-  .btn { padding: 8px 14px; font-size: 0.92rem; }
-  .quiz-nav { padding: 8px 10px calc(8px + env(safe-area-inset-bottom)); }
+  .prog-label { min-width: 62px; font-size: 0.64rem; }
+  .progress-text { font-size: 0.66rem; }
+  .feedback { padding: 7px 9px; margin-top: 6px; border-radius: 9px; }
+  .feedback .verdict { font-size: 0.92rem; }
+  .feedback .why { font-size: 0.83rem; margin-top: 3px; }
+  .btn { padding: 7px 12px; font-size: 0.88rem; }
+  .btn-sm { padding: 5px 10px; font-size: 0.8rem; }
+  .quiz-nav { padding: 6px 8px calc(6px + env(safe-area-inset-bottom)); gap: 6px; border-radius: 10px 10px 0 0; }
+  .quiz-nav .wrong-note { display: none; }
 }
 
 /* ---------- header ---------- */
@@ -83,6 +91,15 @@ body {
 /* ---------- التسجيل والمستخدمون ---------- */
 .register-card { max-width: 460px; margin: 20px auto 0; }
 .register-title { font-size: 1.15rem; font-weight: 800; margin-bottom: 14px; text-align: center; }
+.auth-tabs { display: flex; gap: 6px; margin-bottom: 16px; background: #f1ece6; border-radius: 10px; padding: 4px; }
+.auth-tab {
+  flex: 1; border: none; background: transparent; font-family: inherit;
+  font-weight: 700; font-size: 0.95rem; padding: 8px; border-radius: 8px;
+  cursor: pointer; color: var(--muted);
+}
+.auth-tab.active { background: #fff; color: var(--accent-dark); box-shadow: var(--shadow); }
+.loading-msg { text-align: center; font-weight: 700; color: var(--muted); padding: 18px 0; }
+.sync-warn { color: var(--red); font-size: 0.8rem; }
 .register-form { display: flex; flex-direction: column; gap: 8px; }
 .field-label { font-weight: 700; font-size: 0.92rem; }
 .field-input {

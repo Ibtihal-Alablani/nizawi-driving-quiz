@@ -1,0 +1,11 @@
+{
+  "name": "nizawi-driving-quiz",
+  "version": "1.0.0",
+  "description": "موقع تدريبي تفاعلي على أسئلة الاختبار النظري لرخصة القيادة — كتاب النزاوي لتعليم القيادة",
+  "private": true,
+  "dependencies": {
+    "@netlify/blobs": "^8.1.0",
+    "bcryptjs": "^2.4.3",
+    "jsonwebtoken": "^9.0.2"
+  }
+}
