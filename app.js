@@ -50,8 +50,28 @@
       wrong: Array.from(wrongPool),
       best: best,
       shuffle: shufflePref,
-      sessions: savedSessions
+      sessions: savedSessions,
+      // توافق للخلف: النسخ القديمة من التطبيق تقرأ حقل الجلسة المفردة
+      session: savedSessions[0] || null
     };
+  }
+
+  // دمج جلسات من مصدر آخر دون فقدان أي جلسة (الأحدث لكل معرف يفوز)
+  function mergeSessions(extra) {
+    var changed = false;
+    (extra || []).forEach(function (s) {
+      if (!s || !Array.isArray(s.ids) || !s.ids.length) return;
+      if (!s.sid) s.sid = 's_legacy';
+      var idx = -1;
+      for (var i = 0; i < savedSessions.length; i++) {
+        if (savedSessions[i].sid === s.sid) { idx = i; break; }
+      }
+      if (idx === -1) { savedSessions.push(s); changed = true; }
+      else if ((s.savedAt || 0) > (savedSessions[idx].savedAt || 0)) { savedSessions[idx] = s; changed = true; }
+    });
+    savedSessions.sort(function (a, b) { return (b.savedAt || 0) - (a.savedAt || 0); });
+    if (savedSessions.length > 6) savedSessions.length = 6;
+    return changed;
   }
 
   function hydrate(d) {
@@ -61,12 +81,8 @@
     best = d.best || {};
     shufflePref = !!d.shuffle;
     savedSessions = Array.isArray(d.sessions) ? d.sessions.slice(0, 6) : [];
-    // توافق مع الصيغة القديمة (جلسة واحدة)
-    if (!savedSessions.length && d.session && Array.isArray(d.session.ids)) {
-      var legacy = d.session;
-      legacy.sid = 's_legacy';
-      savedSessions = [legacy];
-    }
+    // الجلسة المفردة القديمة تُدمج دائمًا ولا تُهمل حتى مع وجود القائمة
+    if (d.session && Array.isArray(d.session.ids)) mergeSessions([d.session]);
   }
 
   function persist() {
@@ -87,6 +103,14 @@
 
   window.addEventListener('beforeunload', function () {
     if (syncTimer) { clearTimeout(syncTimer); pushToServer(); }
+  });
+  // على الجوال: إخفاء الصفحة أوثق من beforeunload لدفع المزامنة فورًا
+  document.addEventListener('visibilitychange', function () {
+    if (document.visibilityState === 'hidden' && syncTimer) {
+      clearTimeout(syncTimer);
+      syncTimer = null;
+      pushToServer();
+    }
   });
 
   function logout() {
@@ -339,7 +363,16 @@
         rawWrite('user', user);
         if (j.data) {
           hydrate(j.data);
-          rawWrite(cacheKey(), j.data);
+          // دمج جلسات النسخة المحلية إن كانت أحدث أو غير موجودة على الخادم
+          var localCache = rawRead(cacheKey(), null);
+          var merged = false;
+          if (localCache) {
+            var extra = Array.isArray(localCache.sessions) ? localCache.sessions.slice() : [];
+            if (localCache.session && Array.isArray(localCache.session.ids)) extra.push(localCache.session);
+            merged = mergeSessions(extra);
+          }
+          rawWrite(cacheKey(), blob());
+          if (merged) pushToServer();
         } else {
           // حساب جديد بلا بيانات: نرحّل بيانات الجهاز السابقة إن وجدت
           var local = rawRead(cacheKey(), null) || legacyData();
