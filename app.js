@@ -542,28 +542,13 @@
 
     app.appendChild(grid);
 
-    // مستطيل التلخيص: أبرز ما ورد في كل وحدة
-    var sumBox = el('div', 'card summary-box');
-    sumBox.appendChild(el('div', 'summary-box-title', '📋 ملخص الوحدات — أبرز القوانين والقواعد'));
-    sumBox.appendChild(el('div', 'summary-box-hint', 'اضغطي على أي وحدة لعرض ملخصها'));
-    UNIT_SUMMARIES.forEach(function (s) {
-      var det = document.createElement('details');
-      det.className = 'sum-unit';
-      var summ = document.createElement('summary');
-      summ.innerHTML = 'الوحدة ' + s.t;
-      det.appendChild(summ);
-      var ul = el('ul', 'sum-points');
-      s.pts.forEach(function (p) { ul.appendChild(el('li', null, p)); });
-      det.appendChild(ul);
-      sumBox.appendChild(det);
-    });
-    app.appendChild(sumBox);
-
-    // الوحدات
+    // الوحدات (مع ملخص كل وحدة داخل بطاقتها)
     app.appendChild(el('div', 'section-label', 'التدرب حسب الوحدة'));
     var list = el('div', 'unit-list');
     QUIZ_UNITS.forEach(function (u) {
-      var row = el('div', 'card clickable unit-row');
+      var card = el('div', 'card unit-card');
+
+      var row = el('div', 'unit-row clickable-row');
       row.appendChild(el('div', 'unum', u.num));
       var info = el('div', 'uinfo');
       info.appendChild(el('div', 'uname', u.full));
@@ -574,7 +559,25 @@
       row.addEventListener('click', function () {
         startSession(u.questions, 'unit' + u.num, u.full, shuffleCb.checked);
       });
-      list.appendChild(row);
+      card.appendChild(row);
+
+      var s = UNIT_SUMMARIES[u.num - 1];
+      if (s) {
+        var toggle = el('button', 'sum-toggle', '📋 ملخص الوحدة ▾');
+        var pointsWrap = el('ul', 'sum-points');
+        pointsWrap.style.display = 'none';
+        s.pts.forEach(function (p) { pointsWrap.appendChild(el('li', null, p)); });
+        toggle.addEventListener('click', function (ev) {
+          ev.stopPropagation();
+          var open = pointsWrap.style.display !== 'none';
+          pointsWrap.style.display = open ? 'none' : '';
+          toggle.innerHTML = open ? '📋 ملخص الوحدة ▾' : '📋 إخفاء الملخص ▴';
+          toggle.classList.toggle('open', !open);
+        });
+        card.appendChild(toggle);
+        card.appendChild(pointsWrap);
+      }
+      list.appendChild(card);
     });
     app.appendChild(list);
 
