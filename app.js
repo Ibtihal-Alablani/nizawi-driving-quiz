@@ -38,7 +38,7 @@
   var wrongPool = new Set();
   var best = {};
   var shufflePref = false;
-  var savedSession = null; // آخر جلسة غير مكتملة {ids,i,answers,mode,title,shuffled}
+  var savedSessions = []; // كل الجلسات غير المكتملة [{sid,ids,i,answers,mode,title,shuffled,savedAt}]
   var syncTimer = null;
   var syncFailed = false;
 
@@ -50,7 +50,7 @@
       wrong: Array.from(wrongPool),
       best: best,
       shuffle: shufflePref,
-      session: savedSession
+      sessions: savedSessions
     };
   }
 
@@ -60,7 +60,13 @@
     wrongPool = new Set(d.wrong || []);
     best = d.best || {};
     shufflePref = !!d.shuffle;
-    savedSession = d.session || null;
+    savedSessions = Array.isArray(d.sessions) ? d.sessions.slice(0, 6) : [];
+    // توافق مع الصيغة القديمة (جلسة واحدة)
+    if (!savedSessions.length && d.session && Array.isArray(d.session.ids)) {
+      var legacy = d.session;
+      legacy.sid = 's_legacy';
+      savedSessions = [legacy];
+    }
   }
 
   function persist() {
@@ -141,30 +147,38 @@
 
   function persistSession() {
     if (session) {
-      savedSession = {
+      var snap = {
+        sid: session.sid,
         ids: session.questions.map(function (q) { return q.id; }),
         i: session.i,
         answers: session.answers,
         mode: session.mode,
         title: session.title,
-        shuffled: session.shuffled
+        shuffled: session.shuffled,
+        savedAt: Date.now()
       };
-    } else {
-      savedSession = null;
+      savedSessions = savedSessions.filter(function (s) { return s.sid !== session.sid; });
+      savedSessions.unshift(snap);
+      if (savedSessions.length > 6) savedSessions.length = 6;
     }
     persist();
   }
 
-  function savedSessionInfo() {
-    var s = savedSession;
-    if (!s || !Array.isArray(s.ids) || !s.ids.length) return null;
-    var qs = s.ids.map(function (id) { return byId[id]; }).filter(Boolean);
-    if (qs.length !== s.ids.length) return null;
-    return s;
+  function removeSavedSession(sid) {
+    savedSessions = savedSessions.filter(function (s) { return s.sid !== sid; });
+    persist();
+  }
+
+  function validSavedSessions() {
+    return savedSessions.filter(function (s) {
+      if (!s || !Array.isArray(s.ids) || !s.ids.length) return false;
+      return s.ids.every(function (id) { return byId[id]; });
+    });
   }
 
   function resumeSession(s) {
     session = {
+      sid: s.sid,
       questions: s.ids.map(function (id) { return byId[id]; }),
       i: Math.min(s.i, s.ids.length - 1),
       answers: s.answers || {},
@@ -179,6 +193,7 @@
   function startSession(questions, mode, title, doShuffle) {
     if (!questions.length) return;
     session = {
+      sid: 's' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
       questions: doShuffle ? shuffle(questions) : questions.slice(),
       i: 0,
       answers: {},
@@ -459,23 +474,29 @@
     header.appendChild(switchLink);
     app.appendChild(header);
 
-    // بطاقة متابعة الجلسة المحفوظة
-    var saved = savedSessionInfo();
-    if (saved) {
-      var answeredCount = Object.keys(saved.answers || {}).length;
-      var resumeCard = el('div', 'card resume-card');
-      var rInfo = el('div', 'resume-info');
-      rInfo.appendChild(el('div', 'resume-title', '⏯ لديك جلسة غير مكتملة: ' + esc(saved.title)));
-      rInfo.appendChild(el('div', 'resume-meta', 'توقفتِ عند السؤال ' + (Math.min(saved.i, saved.ids.length - 1) + 1) + ' من ' + saved.ids.length + ' — أجبتِ عن ' + answeredCount + ' سؤالًا'));
-      resumeCard.appendChild(rInfo);
-      var rActions = el('div', 'resume-actions');
-      var resumeBtn = el('button', 'btn btn-primary', 'متابعة من حيث توقفت');
-      resumeBtn.addEventListener('click', function () { resumeSession(saved); });
-      var dismissBtn = el('button', 'btn btn-soft btn-sm', 'تجاهل');
-      dismissBtn.addEventListener('click', function () { savedSession = null; persist(); renderHome(); });
-      rActions.appendChild(resumeBtn);
-      rActions.appendChild(dismissBtn);
-      resumeCard.appendChild(rActions);
+    // الجلسات غير المكتملة (كلها تبقى محفوظة، ويمكن بدء جلسات جديدة بجانبها)
+    var savedList = validSavedSessions();
+    if (savedList.length) {
+      var resumeCard = el('div', 'card resume-card-multi');
+      resumeCard.appendChild(el('div', 'resume-title', '⏯ جلساتك غير المكتملة (' + savedList.length + ')'));
+      savedList.forEach(function (saved) {
+        var answeredCount = Object.keys(saved.answers || {}).length;
+        var row = el('div', 'resume-row');
+        var rInfo = el('div', 'resume-info');
+        rInfo.appendChild(el('div', 'resume-row-title', esc(saved.title)));
+        rInfo.appendChild(el('div', 'resume-meta', 'أجبتِ عن ' + answeredCount + ' من ' + saved.ids.length + ' — توقفتِ عند سؤال ' + (Math.min(saved.i, saved.ids.length - 1) + 1)));
+        row.appendChild(rInfo);
+        var rActions = el('div', 'resume-actions');
+        var resumeBtn = el('button', 'btn btn-primary btn-sm', 'متابعة');
+        resumeBtn.addEventListener('click', function () { resumeSession(saved); });
+        var dismissBtn = el('button', 'btn btn-soft btn-sm', '🗑');
+        dismissBtn.title = 'حذف هذه الجلسة';
+        dismissBtn.addEventListener('click', function () { removeSavedSession(saved.sid); renderHome(); });
+        rActions.appendChild(resumeBtn);
+        rActions.appendChild(dismissBtn);
+        row.appendChild(rActions);
+        resumeCard.appendChild(row);
+      });
       app.appendChild(resumeCard);
     }
 
@@ -867,11 +888,9 @@
     if (!prev || score / total > prev.score / prev.total) {
       best[session.mode] = { score: score, total: total };
     }
-    var finishedSession = session;
-    session = null;
-    savedSession = null; // اكتملت الجلسة
+    // اكتملت الجلسة — تُحذف من قائمة الجلسات غير المكتملة
+    savedSessions = savedSessions.filter(function (s) { return s.sid !== session.sid; });
     persist();
-    session = finishedSession;
 
     app.innerHTML = '';
     var bar = el('div', 'topbar');

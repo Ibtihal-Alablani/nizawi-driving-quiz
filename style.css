@@ -140,14 +140,16 @@ body {
   text-decoration: underline;
 }
 
-/* بطاقة المتابعة */
-.resume-card {
-  display: flex; align-items: center; justify-content: space-between; gap: 14px;
-  flex-wrap: wrap; border: 2px solid var(--accent); margin-bottom: 4px;
+/* بطاقة الجلسات غير المكتملة */
+.resume-card-multi { border: 2px solid var(--accent); margin-bottom: 4px; }
+.resume-title { font-weight: 800; font-size: 1rem; margin-bottom: 6px; }
+.resume-row {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  flex-wrap: wrap; padding: 8px 2px; border-top: 1px dashed var(--border);
 }
-.resume-title { font-weight: 800; font-size: 1rem; }
-.resume-meta { color: var(--muted); font-size: 0.88rem; }
-.resume-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.resume-row-title { font-weight: 700; font-size: 0.95rem; }
+.resume-meta { color: var(--muted); font-size: 0.85rem; }
+.resume-actions { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
 
 /* ---------- home ---------- */
 .mode-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 14px 0; }
