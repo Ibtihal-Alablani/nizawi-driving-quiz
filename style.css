@@ -238,7 +238,9 @@ body {
   cursor: pointer; transition: border-color 0.12s, background 0.12s;
 }
 .unit-chip:hover { border-color: var(--accent); background: var(--accent-light); }
+.unit-chip.done { border-color: var(--green); color: var(--green); background: var(--green-light); }
 .unit-chip.current { background: var(--accent); border-color: var(--accent); color: #fff; }
+.unit-chip.current.done { background: var(--green); border-color: var(--green); }
 
 .q-card { margin-top: 14px; }
 .q-head { display: flex; align-items: flex-start; gap: 10px; }

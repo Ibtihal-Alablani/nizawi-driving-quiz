@@ -635,7 +635,14 @@
       var chips = el('div', 'unit-chips');
       QUIZ_UNITS.forEach(function (u) {
         var isCurrent = q.unit === u.num;
-        var chip = el('button', 'unit-chip' + (isCurrent ? ' current' : ''), ORDINALS[u.num - 1]);
+        var chipText = ORDINALS[u.num - 1];
+        var chipCls = 'unit-chip' + (isCurrent ? ' current' : '');
+        if (session.mode === 'all') {
+          var uqs = session.questions.filter(function (x) { return x.unit === u.num; });
+          var uDone = uqs.every(function (x) { return session.answers.hasOwnProperty(x.id); });
+          if (uDone) { chipText += ' ✓'; chipCls += ' done'; }
+        }
+        var chip = el('button', chipCls, chipText);
         chip.title = u.full + ' (' + u.questions.length + ' سؤالًا)';
         chip.addEventListener('click', function () {
           if (session.mode === 'all') {
@@ -718,7 +725,14 @@
     prevBtn.addEventListener('click', function () {
       if (session.i > 0) { session.i--; renderQuestion(); window.scrollTo(0, 0); }
     });
-    var nextBtn = el('button', 'btn btn-ghost nav-next', session.i + 1 < session.questions.length ? 'تخطي السؤال ←' : 'إنهاء الاختبار 🏁');
+    var nextLabel;
+    if (session.i + 1 < session.questions.length) {
+      nextLabel = 'تخطي السؤال ←';
+    } else {
+      var rem0 = remainingCount();
+      nextLabel = rem0 > 0 ? 'إلى الأسئلة المتبقية (' + rem0 + ') ↻' : 'عرض النتيجة 🏁';
+    }
+    var nextBtn = el('button', 'btn btn-ghost nav-next', nextLabel);
     nextBtn.addEventListener('click', function () { next(); });
     nav.appendChild(prevBtn);
     nav.appendChild(nextBtn);
@@ -786,7 +800,12 @@
     var nav = app.querySelector('.quiz-nav');
     var nextBtn = nav.querySelector('.nav-next');
     nextBtn.className = 'btn btn-primary nav-next';
-    nextBtn.innerHTML = session.i + 1 < session.questions.length ? 'السؤال التالي ←' : 'عرض النتيجة 🏁';
+    if (session.i + 1 < session.questions.length) {
+      nextBtn.innerHTML = 'السؤال التالي ←';
+    } else {
+      var rem = remainingCount();
+      nextBtn.innerHTML = rem > 0 ? 'إلى الأسئلة المتبقية (' + rem + ') ↻' : 'عرض النتيجة 🏁';
+    }
     if (!ok && !nav.querySelector('.wrong-note')) {
       nav.appendChild(el('span', 'progress-text wrong-note', 'أُضيف السؤال لقائمة «إعادة الأخطاء»'));
     }
@@ -800,14 +819,35 @@
     return '';
   }
 
+  function remainingCount() {
+    var n = 0;
+    session.questions.forEach(function (x) { if (!session.answers.hasOwnProperty(x.id)) n++; });
+    return n;
+  }
+
+  function firstUnansweredIndex() {
+    for (var k = 0; k < session.questions.length; k++) {
+      if (!session.answers.hasOwnProperty(session.questions[k].id)) return k;
+    }
+    return -1;
+  }
+
   function next() {
     if (session.i + 1 < session.questions.length) {
       session.i++;
       renderQuestion();
       window.scrollTo(0, 0);
     } else {
-      renderSummary();
-      window.scrollTo(0, 0);
+      // آخر سؤال: لا نتيجة قبل إجابة كل الأسئلة — نعود لأول سؤال غير مُجاب
+      var idx = firstUnansweredIndex();
+      if (idx !== -1) {
+        session.i = idx;
+        renderQuestion();
+        window.scrollTo(0, 0);
+      } else {
+        renderSummary();
+        window.scrollTo(0, 0);
+      }
     }
   }
 
