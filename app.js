@@ -619,33 +619,15 @@
     });
     grid.appendChild(mixCard);
 
-    app.appendChild(grid);
+    var vioModeCard = el('div', 'card clickable mode-card');
+    vioModeCard.appendChild(el('div', 'icon', '⚠️'));
+    vioModeCard.appendChild(el('div', 'name', 'جدول النقاط للمخالفات'));
+    vioModeCard.appendChild(el('div', 'desc', 'نقاط المخالفات المرورية مرتبة من الأشد إلى الأخف'));
+    vioModeCard.appendChild(el('span', 'count', VIOLATIONS.length + ' مخالفة'));
+    vioModeCard.addEventListener('click', renderViolations);
+    grid.appendChild(vioModeCard);
 
-    // جدول النقاط للمخالفات المرورية
-    var vioCard = el('div', 'card vio-card');
-    var vioToggle = el('button', 'vio-toggle', '⚠️ جدول النقاط للمخالفات المرورية ▾');
-    var vioBody = el('div', 'vio-body');
-    vioBody.style.display = 'none';
-    var tbl = el('table', 'vio-table');
-    tbl.innerHTML = '<thead><tr><th>م</th><th>مسمى المخالفة</th><th>النقاط</th></tr></thead>';
-    var tbody = document.createElement('tbody');
-    VIOLATIONS.forEach(function (v, i) {
-      var tr = document.createElement('tr');
-      var sev = v[1] >= 24 ? 'sev-24' : v[1] >= 12 ? 'sev-12' : v[1] >= 8 ? 'sev-8' : v[1] >= 6 ? 'sev-6' : v[1] >= 4 ? 'sev-4' : 'sev-2';
-      tr.innerHTML = '<td>' + (i + 1) + '</td><td>' + esc(v[0]) + '</td><td><span class="vio-pts ' + sev + '">' + v[1] + '</span></td>';
-      tbody.appendChild(tr);
-    });
-    tbl.appendChild(tbody);
-    vioBody.appendChild(tbl);
-    vioBody.appendChild(el('div', 'vio-note', 'المصدر: الإدارة العامة للمرور — تُحتسب النقاط عند ارتكاب المخالفة، وتراكمها يؤدي إلى سحب الرخصة.'));
-    vioToggle.addEventListener('click', function () {
-      var open = vioBody.style.display !== 'none';
-      vioBody.style.display = open ? 'none' : '';
-      vioToggle.innerHTML = open ? '⚠️ جدول النقاط للمخالفات المرورية ▾' : '⚠️ إخفاء جدول النقاط ▴';
-    });
-    vioCard.appendChild(vioToggle);
-    vioCard.appendChild(vioBody);
-    app.appendChild(vioCard);
+    app.appendChild(grid);
 
     // الوحدات (مع ملخص كل وحدة داخل بطاقتها)
     app.appendChild(el('div', 'section-label', 'التدرب حسب الوحدة'));
@@ -688,6 +670,36 @@
 
     var footer = el('footer', 'site-footer', 'جميع الأسئلة منقولة من كتاب النزاوي لتعليم القيادة لأغراض التدريب الشخصي');
     app.appendChild(footer);
+  }
+
+  // ---------- صفحة جدول النقاط للمخالفات ----------
+  function renderViolations() {
+    session = null;
+    app.innerHTML = '';
+
+    var bar = el('div', 'topbar');
+    var backBtn = el('button', 'btn btn-soft btn-sm', 'الرئيسية ⌂');
+    backBtn.addEventListener('click', renderHome);
+    bar.appendChild(backBtn);
+    bar.appendChild(el('div', 'title', '⚠️ جدول النقاط للمخالفات المرورية'));
+    app.appendChild(bar);
+
+    var card = el('div', 'card vio-page-card');
+    var tbl = el('table', 'vio-table');
+    tbl.innerHTML = '<thead><tr><th>م</th><th>مسمى المخالفة</th><th>النقاط</th></tr></thead>';
+    var tbody = document.createElement('tbody');
+    VIOLATIONS.forEach(function (v, i) {
+      var tr = document.createElement('tr');
+      var sev = v[1] >= 24 ? '24' : v[1] >= 12 ? '12' : v[1] >= 8 ? '8' : v[1] >= 6 ? '6' : v[1] >= 4 ? '4' : '2';
+      tr.className = 'row-' + sev;
+      tr.innerHTML = '<td>' + (i + 1) + '</td><td>' + esc(v[0]) + '</td><td><span class="vio-pts sev-' + sev + '">' + v[1] + '</span></td>';
+      tbody.appendChild(tr);
+    });
+    tbl.appendChild(tbody);
+    card.appendChild(tbl);
+    card.appendChild(el('div', 'vio-note', 'المصدر: الإدارة العامة للمرور — تُحتسب النقاط عند ارتكاب المخالفة، وتراكمها يؤدي إلى سحب الرخصة.'));
+    app.appendChild(card);
+    window.scrollTo(0, 0);
   }
 
   // ---------- عرض السؤال ----------

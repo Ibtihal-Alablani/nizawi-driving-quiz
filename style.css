@@ -176,23 +176,23 @@ body {
 
 .section-label { font-weight: 800; font-size: 1.1rem; margin: 22px 0 10px; color: var(--ink); }
 
-/* جدول النقاط للمخالفات المرورية */
-.vio-card { margin-top: 14px; border: 2px solid var(--amber); padding: 8px 14px; }
-.vio-toggle {
-  display: block; width: 100%; text-align: right; background: none; border: none;
-  font-family: inherit; font-weight: 800; font-size: 1.02rem; color: #9a7200;
-  cursor: pointer; padding: 6px 2px;
-}
-.vio-toggle:hover { text-decoration: underline; }
-.vio-body { padding: 6px 0 4px; }
+/* صفحة جدول النقاط للمخالفات المرورية */
+.vio-page-card { margin-top: 4px; border: 2px solid var(--amber); }
 .vio-table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
 .vio-table th {
   background: #fff7e0; color: #7a5a00; font-weight: 800; padding: 7px 8px;
   border: 1px solid var(--border); text-align: right;
 }
-.vio-table td { border: 1px solid var(--border); padding: 6px 8px; background: #fff; }
+.vio-table td { border: 1px solid var(--border); padding: 6px 8px; }
 .vio-table td:first-child { text-align: center; color: var(--muted); width: 34px; }
 .vio-table td:last-child { text-align: center; width: 64px; }
+/* تلوين الصف بدرجة فاتحة من لون النقاط */
+.row-24 td { background: #fbd9d9; }
+.row-12 td { background: #fce5e5; }
+.row-8  td { background: #fdeadd; }
+.row-6  td { background: #fdf3dc; }
+.row-4  td { background: #faf6d8; }
+.row-2  td { background: #efeff2; }
 .vio-pts {
   display: inline-block; min-width: 34px; padding: 2px 8px; border-radius: 16px;
   font-weight: 800; color: #fff;
