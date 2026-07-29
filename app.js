@@ -494,6 +494,31 @@
     }
   ];
 
+  // ---------- جدول النقاط للمخالفات المرورية ----------
+  var VIOLATIONS = [
+    ['قيادة المركبة تحت تأثير سكر أو مخدر', 24],
+    ['التفحيط', 24],
+    ['تجاوز إشارة المرور الضوئية أثناء الضوء الأحمر', 12],
+    ['قيادة المركبة بالاتجاه المعاكس لحركة السير', 12],
+    ['المراوغة بسرعة بين المركبات على الطرق العامة', 8],
+    ['عدم التقيد بإشارة رجل الأمن اليدوية', 8],
+    ['قيادة المركبة بدون مكابح أو أنوار', 8],
+    ['عدم الوقوف تمامًا عند إشارة قف', 6],
+    ['عدم مراعاة قواعد الأفضلية', 6],
+    ['تجاوز السرعة المحددة بأكثر من ٢٥ كم في الساعة', 6],
+    ['عدم إعطاء الأفضلية للسيارات التي بداخل الدوار', 6],
+    ['التجاوز في المناطق التي يمنع التجاوز فيها', 6],
+    ['الوقوف على خطوط السكة الحديدية', 6],
+    ['تجاوز السرعة المحددة بمقدار لا يزيد عن ٢٥ كم في الساعة', 4],
+    ['القيادة في مسارات غير مخصصة لذلك', 4],
+    ['تجاوز حافلات النقل المدرسي عند توقفها للتحميل والتنزيل', 4],
+    ['عدم تغطية وتربيط الحمولة المنقولة', 4],
+    ['إجراء أي تعديل أو إضافة على هيكل أو جسم المركبة بدون اتخاذ الإجراءات النظامية', 4],
+    ['عدم ربط حزام الأمان', 2],
+    ['استخدام الهاتف المحمول باليد أثناء القيادة', 2],
+    ['عدم ارتداء الخوذة أثناء قيادة الدراجات الآلية', 2]
+  ];
+
   // ---------- الصفحة الرئيسية ----------
   function renderHome() {
     session = null;
@@ -595,6 +620,32 @@
     grid.appendChild(mixCard);
 
     app.appendChild(grid);
+
+    // جدول النقاط للمخالفات المرورية
+    var vioCard = el('div', 'card vio-card');
+    var vioToggle = el('button', 'vio-toggle', '⚠️ جدول النقاط للمخالفات المرورية ▾');
+    var vioBody = el('div', 'vio-body');
+    vioBody.style.display = 'none';
+    var tbl = el('table', 'vio-table');
+    tbl.innerHTML = '<thead><tr><th>م</th><th>مسمى المخالفة</th><th>النقاط</th></tr></thead>';
+    var tbody = document.createElement('tbody');
+    VIOLATIONS.forEach(function (v, i) {
+      var tr = document.createElement('tr');
+      var sev = v[1] >= 24 ? 'sev-24' : v[1] >= 12 ? 'sev-12' : v[1] >= 8 ? 'sev-8' : v[1] >= 6 ? 'sev-6' : v[1] >= 4 ? 'sev-4' : 'sev-2';
+      tr.innerHTML = '<td>' + (i + 1) + '</td><td>' + esc(v[0]) + '</td><td><span class="vio-pts ' + sev + '">' + v[1] + '</span></td>';
+      tbody.appendChild(tr);
+    });
+    tbl.appendChild(tbody);
+    vioBody.appendChild(tbl);
+    vioBody.appendChild(el('div', 'vio-note', 'المصدر: الإدارة العامة للمرور — تُحتسب النقاط عند ارتكاب المخالفة، وتراكمها يؤدي إلى سحب الرخصة.'));
+    vioToggle.addEventListener('click', function () {
+      var open = vioBody.style.display !== 'none';
+      vioBody.style.display = open ? 'none' : '';
+      vioToggle.innerHTML = open ? '⚠️ جدول النقاط للمخالفات المرورية ▾' : '⚠️ إخفاء جدول النقاط ▴';
+    });
+    vioCard.appendChild(vioToggle);
+    vioCard.appendChild(vioBody);
+    app.appendChild(vioCard);
 
     // الوحدات (مع ملخص كل وحدة داخل بطاقتها)
     app.appendChild(el('div', 'section-label', 'التدرب حسب الوحدة'));

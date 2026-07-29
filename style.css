@@ -176,6 +176,39 @@ body {
 
 .section-label { font-weight: 800; font-size: 1.1rem; margin: 22px 0 10px; color: var(--ink); }
 
+/* جدول النقاط للمخالفات المرورية */
+.vio-card { margin-top: 14px; border: 2px solid var(--amber); padding: 8px 14px; }
+.vio-toggle {
+  display: block; width: 100%; text-align: right; background: none; border: none;
+  font-family: inherit; font-weight: 800; font-size: 1.02rem; color: #9a7200;
+  cursor: pointer; padding: 6px 2px;
+}
+.vio-toggle:hover { text-decoration: underline; }
+.vio-body { padding: 6px 0 4px; }
+.vio-table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
+.vio-table th {
+  background: #fff7e0; color: #7a5a00; font-weight: 800; padding: 7px 8px;
+  border: 1px solid var(--border); text-align: right;
+}
+.vio-table td { border: 1px solid var(--border); padding: 6px 8px; background: #fff; }
+.vio-table td:first-child { text-align: center; color: var(--muted); width: 34px; }
+.vio-table td:last-child { text-align: center; width: 64px; }
+.vio-pts {
+  display: inline-block; min-width: 34px; padding: 2px 8px; border-radius: 16px;
+  font-weight: 800; color: #fff;
+}
+.sev-24 { background: #b71c1c; }
+.sev-12 { background: #d64545; }
+.sev-8  { background: #e2703a; }
+.sev-6  { background: #e9a13b; }
+.sev-4  { background: #c9b037; }
+.sev-2  { background: #8a8a94; }
+.vio-note { color: var(--muted); font-size: 0.8rem; margin-top: 8px; }
+@media (max-width: 600px) {
+  .vio-table { font-size: 0.82rem; }
+  .vio-table td, .vio-table th { padding: 4px 5px; }
+}
+
 /* ملخص الوحدة داخل بطاقة التدرب */
 .unit-card .unit-row { cursor: pointer; border-radius: 8px; padding: 2px; transition: background 0.12s; }
 .unit-card .unit-row:hover { background: var(--accent-light); }
