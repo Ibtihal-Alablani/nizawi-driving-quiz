@@ -152,6 +152,15 @@
   var byId = {};
   allQuestions.forEach(function (q) { byId[q.id] = q; });
 
+  // أسئلة البرنامج الأصفر الإضافية (قسم مستقل لا يدخل في الاختبار الشامل)
+  var extraQuestions = (typeof EXTRA_QUESTIONS !== 'undefined') ? EXTRA_QUESTIONS : [];
+  extraQuestions.forEach(function (q) {
+    q.unit = 0;
+    q.unitTitle = 'أسئلة إضافية من البرنامج الأصفر';
+    q.id = 'xq' + q.n;
+    byId[q.id] = q;
+  });
+
   function isCorrectChoice(q, idx) {
     if (idx === q.correct) return true;
     return Array.isArray(q.alsoCorrect) && q.alsoCorrect.indexOf(idx) !== -1;
@@ -626,6 +635,18 @@
     vioModeCard.appendChild(el('span', 'count', VIOLATIONS.length + ' مخالفة'));
     vioModeCard.addEventListener('click', renderViolations);
     grid.appendChild(vioModeCard);
+
+    if (extraQuestions.length) {
+      var extraCard = el('div', 'card clickable mode-card');
+      extraCard.appendChild(el('div', 'icon', '🟡'));
+      extraCard.appendChild(el('div', 'name', 'أسئلة إضافية من البرنامج الأصفر'));
+      extraCard.appendChild(el('div', 'desc', 'أسئلة من تطبيق امتحان رخصة القيادة لم ترد في ملف النزاوي'));
+      extraCard.appendChild(el('span', 'count', extraQuestions.length + ' سؤالًا'));
+      extraCard.addEventListener('click', function () {
+        startSession(extraQuestions, 'extra', 'أسئلة إضافية من البرنامج الأصفر', shuffleCb.checked);
+      });
+      grid.appendChild(extraCard);
+    }
 
     app.appendChild(grid);
 
