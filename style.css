@@ -204,6 +204,7 @@ body {
 .sev-4  { background: #c9b037; }
 .sev-2  { background: #8a8a94; }
 .vio-note { color: var(--muted); font-size: 0.8rem; margin-top: 8px; }
+.vio-star { color: var(--red); font-weight: 800; font-size: 1.1em; }
 @media (max-width: 600px) {
   .vio-table { font-size: 0.82rem; }
   .vio-table td, .vio-table th { padding: 4px 5px; }
