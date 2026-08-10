@@ -623,10 +623,10 @@
     var mixCard = el('div', 'card clickable mode-card');
     mixCard.appendChild(el('div', 'icon', '🎲'));
     mixCard.appendChild(el('div', 'name', 'اختبار سريع'));
-    mixCard.appendChild(el('div', 'desc', '20 سؤالًا عشوائيًا من كل الوحدات — محاكاة سريعة للاختبار'));
-    mixCard.appendChild(el('span', 'count', '20 سؤال'));
+    mixCard.appendChild(el('div', 'desc', '30 سؤالًا عشوائيًا من كل الوحدات — بعدد أسئلة الاختبار الفعلي'));
+    mixCard.appendChild(el('span', 'count', '30 سؤال'));
     mixCard.addEventListener('click', function () {
-      startSession(shuffle(allQuestions).slice(0, 20), 'quick', 'اختبار سريع', false);
+      startSession(shuffle(allQuestions).slice(0, 30), 'quick', 'اختبار سريع', false);
     });
     grid.appendChild(mixCard);
 
