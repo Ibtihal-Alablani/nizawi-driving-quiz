@@ -791,7 +791,7 @@
 
     var header = el('div', 'site-header');
     header.appendChild(el('h1', null, t('title')));
-    header.appendChild(el('p', 'sub', tf('greeting', { name: esc(user.name), n: allQuestions.length, u: QUIZ_UNITS.length }) + (syncFailed ? ' <span class="sync-warn">' + t('offline') + '</span>' : '')));
+    header.appendChild(el('p', 'sub', tf('greeting', { name: '<bdi>' + esc(user.name) + '</bdi>', n: allQuestions.length, u: QUIZ_UNITS.length }) + (syncFailed ? ' <span class="sync-warn">' + t('offline') + '</span>' : '')));
     var switchLink = el('button', 'switch-user', t('logout'));
     switchLink.addEventListener('click', logout);
     header.appendChild(switchLink);
